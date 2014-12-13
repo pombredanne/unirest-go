@@ -307,20 +307,20 @@ func SetConnectTimeout(duration time.Duration) {
   defaultDialer.Timeout = duration
 }
 
+func (r *Request) Query(name string, value string) {
+  if r.Querystring == nil {
+    r.Querystring = &url.Values{}
+  }
+
+  r.Querystring.add(strings.ToLower(name), value)
+}
+
 func (r *Request) Header(name string, value string) {
   if r.Headers == nil {
     r.Headers = []Header{}
   }
 
   r.Headers = append(r.Headers, Header{name: name, value: value})
-}
-
-func (r *Request) HeaderStruct(header Header) {
-  if r.Headers == nil {
-    r.Headers = []Header{}
-  }
-
-  r.Headers = append(r.Headers, header)
 }
 
 func (r Request) End() (*Response, error) {
