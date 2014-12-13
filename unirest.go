@@ -249,7 +249,7 @@ func Zlib() *Compression {
   return &Compression{writer: writer, reader: reader, ContentEncoding: "deflate"}
 }
 
-func parseStructToUrlValue(query interface{}) (url.Value, error) {
+func parseStructToUrlValue(query interface{}) (url.Values, error) {
   var (
     v = &url.Values{}
     s = reflect.ValueOf(query)
@@ -263,7 +263,7 @@ func parseStructToUrlValue(query interface{}) (url.Value, error) {
   return v, nil
 }
 
-func paramParse(query url.Value) (string, error) {
+func paramParse(query url.Values) (string, error) {
   return query.Encode(), nil
 }
 
