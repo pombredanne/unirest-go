@@ -25,6 +25,12 @@ import (
   "time"
 )
 
+var defaultDialer = &net.Dialer{Timeout: 1000 * time.Millisecond}
+var defaultTransport = &http.Transport{Dial: defaultDialer.Dial, Proxy: http.ProxyFromEnvironment}
+var defaultClient = &http.Client{Transport: defaultTransport}
+var proxyTransport *http.Transport
+var proxyClient *http.Client
+
 // Unirest Request represents the HTTP request being sent by
 // a client, or a request to be recieved by the server.
 type Request struct {
@@ -95,7 +101,7 @@ type Request struct {
 
   // HTTP Request Querystring
   //
-  // Contains key-value data which is converted to string during paramParse
+  // Contains key-value data which is converted to string during encodeQueryString
   Querystring       url.Values
 
   // HTTP Request Timeout
@@ -249,6 +255,10 @@ func Zlib() *Compression {
   return &Compression{writer: writer, reader: reader, ContentEncoding: "deflate"}
 }
 
+func SetConnectTimeout(duration time.Duration) {
+  defaultDialer.Timeout = duration
+}
+
 func parseStructToUrlValue(query interface{}) (url.Values, error) {
   var (
     v = &url.Values{}
@@ -263,7 +273,7 @@ func parseStructToUrlValue(query interface{}) (url.Values, error) {
   return v, nil
 }
 
-func paramParse(query url.Values) (string, error) {
+func encodeQueryString(query url.Values) (string, error) {
   return query.Encode(), nil
 }
 
@@ -297,15 +307,16 @@ func prepareRequestBody(b interface{}) (io.Reader, error) {
   }
 }
 
-var defaultDialer = &net.Dialer{Timeout: 1000 * time.Millisecond}
-var defaultTransport = &http.Transport{Dial: defaultDialer.Dial, Proxy: http.ProxyFromEnvironment}
-var defaultClient = &http.Client{Transport: defaultTransport}
-var proxyTransport *http.Transport
-var proxyClient *http.Client
+// When value is empty return fallbackValue argument as a
+// fallback value.
+func fallbackValue(value, fallbackValue string) string {
+  if value != "" {
+    return value
+  }
 
-func SetConnectTimeout(duration time.Duration) {
-  defaultDialer.Timeout = duration
+  return fallbackValue
 }
+
 
 func (r *Request) Query(name string, value string) {
   if r.Querystring == nil {
@@ -386,7 +397,7 @@ func (r Request) End() (*Response, error) {
 
   // Parse query parameters
   if r.Querystring != nil {
-    param, e := paramParse(r.Querystring)
+    param, e := encodeQueryString(r.Querystring)
     if e != nil {
       return nil, &Error{Err: e}
     }
@@ -487,14 +498,4 @@ func (r Request) End() (*Response, error) {
   } else {
     return &Response{StatusCode: res.StatusCode, ContentLength: res.ContentLength, Header: res.Header, Body: &Body{reader: res.Body}}, nil
   }
-}
-
-// When value is empty return fallbackValue argument as a
-// fallback value.
-func fallbackValue(value, fallbackValue string) string {
-  if value != "" {
-    return value
-  }
-
-  return fallbackValue
 }
