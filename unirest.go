@@ -204,7 +204,7 @@ func (b *Body) FromJsonTo(o interface{}) error {
   return nil
 }
 
-func (b *Body) ToString() (string, error) {
+func (b *Body) String() (string, error) {
   body, err := ioutil.ReadAll(b)
   if err != nil {
     return "", err
@@ -307,7 +307,7 @@ func SetConnectTimeout(duration time.Duration) {
   defaultDialer.Timeout = duration
 }
 
-func (r *Request) header(name string, value string) {
+func (r *Request) Header(name string, value string) {
   if r.Headers == nil {
     r.Headers = []Header{}
   }
@@ -315,7 +315,7 @@ func (r *Request) header(name string, value string) {
   r.Headers = append(r.Headers, Header{name: name, value: value})
 }
 
-func (r *Request) header(header Header) {
+func (r *Request) HeaderStruct(header Header) {
   if r.Headers == nil {
     r.Headers = []Header{}
   }
@@ -323,7 +323,7 @@ func (r *Request) header(header Header) {
   r.Headers = append(r.Headers, header)
 }
 
-func (r Request) end() (*Response, error) {
+func (r Request) End() (*Response, error) {
   var req *http.Request
   var er error
   var transport = defaultTransport
